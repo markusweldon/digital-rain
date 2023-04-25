@@ -3,6 +3,7 @@
 A simple and cool Matrix-style digital rain effect using HTML, CSS, and JavaScript.
 
 Wake up...
+
 Follow the white rabbit...
 
 ![Matrix Text Rain Screenshot](matrix-digital-rain.gif)
