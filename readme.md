@@ -1,6 +1,6 @@
 # 👨‍💻 🐇 Matrix-style Digital Rain Effect
 
-A simple and cool Matrix-style digital rain effect using HTML, CSS, and JavaScript.
+A simple and cool Matrix-style digital rain effect generated in JavaScript, this project uses HTML and CSS.
 
 Wake up...
 
@@ -22,12 +22,15 @@ Follow the white rabbit...
 
 ## Customization
 
-You can easily customize the appearance of the Matrix-style digital rain effect by modifying the following variables in the `script.js` file:
+You can easily customize the appearance of the Matrix-style digital rain effect by modifying the following variables:
 
-- `fontSize`: Change the font size of the characters
-- `characters`: Modify the set of characters used for the Matrix-style digital rain effect
+In style.css:
+- `--background-color: rgba(0, 0, 0, 0.05);` Modifies the background color
+- `--text-color: rgb(0, 255, 0);` Modifies the text color of the characters
+- `--font-size: 10px;` Modifies the font size of the characters
 
-You can also change the text color and background color in the `styles.css` file.
+In script.js:
+- `characters`: Modifies the array of characters used
 
 ## License
 
