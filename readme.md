@@ -2,9 +2,11 @@
 
 A simple and cool Matrix-style digital rain effect generated in JavaScript, this project uses HTML and CSS.
 
+## Live Preview
+
 Wake up...
 
-Follow the white rabbit...
+Follow the white rabbit... [Preview the project](<https://markusweldon-matrix-digital-rain.vercel.app>)
 
 ![Matrix Text Rain Screenshot](matrix-digital-rain.gif)
 
