@@ -6,7 +6,7 @@ Welcome to the Matrix Digital Rain project, a mesmerizing visual representation 
 
 Wake up...
 
-Follow the white rabbit... [Preview the project](<https://markusweldon-matrix-digital-rain.vercel.app>)
+Follow the white rabbit... [Preview the project](<https://matrix-digital-rain.vercel.app>)
 
 ![Matrix Text Rain Screenshot](matrix-digital-rain.gif)
 
