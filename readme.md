@@ -1,6 +1,6 @@
 # 👨‍💻 🐇 Matrix-style Digital Rain Effect
 
-A simple and cool Matrix-style digital rain effect generated in JavaScript, this project uses HTML and CSS.
+Welcome to the Matrix Digital Rain project, a mesmerizing visual representation inspired by the iconic digital rain sequence from the Matrix. This project is a tribute to the beauty that can be found at the intersection of art and technology. Built using JavaScript, this project uses HTML and CSS.
 
 ## Live Preview
 
