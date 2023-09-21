@@ -1,4 +1,4 @@
-# 👨‍💻 🐇 Matrix-style Digital Rain Effect
+# 👨‍💻 🐇 Matrix Digital Rain
 
 This project is a tribute to the beauty that can be found at the intersection of art and technology. Built using JavaScript, this project uses HTML and CSS. Welcome to the Matrix Digital Rain project, a mesmerizing visual representation inspired by the iconic digital rain sequence from the Matrix. 
 
@@ -8,7 +8,7 @@ Wake up...
 
 Follow the white rabbit... [Preview the project on Vercel](<https://matrix-digital-rain.vercel.app>)
 
-![Matrix Text Rain Screenshot](matrix-digital-rain.gif)
+![Matrix Digital Rain](matrix-digital-rain.gif)
 
 ## ✨ Features
 
