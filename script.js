@@ -1,5 +1,5 @@
 // Get the canvas element and its 2D context
-const canvas = document.getElementById('matrixCanvas');
+const canvas = document.getElementById('digitalRainCanvas');
 const ctx = canvas.getContext('2d');
 
 // Set the canvas size to match the window size
