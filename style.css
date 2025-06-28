@@ -2,6 +2,11 @@
   --background-color: rgba(41, 33, 56, 0.08);
   --text-color: rgb(255, 4, 163);
   --font-size: 16px;
+  --neon-pink: #ff0080;
+  --neon-cyan: #00ffff;
+  --neon-purple: #8000ff;
+  --dark-bg: #0a0a0f;
+  --panel-bg: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
 }
 
 body {
@@ -11,57 +16,172 @@ body {
   width: 100%;
   height: 100%;
   background-color: var(--background-color);
+  font-family: 'Courier New', monospace;
 }
 
 canvas {
   display: block;
 }
 
-/* Resetting margin and preventing overflow for full canvas display */
-body {
-  margin: 0;
-  overflow: hidden;
-}
-
-/* Styles for the settings toggle button */
-
+/* Synthwave Settings Button */
 #settings-toggle-button {
   position: fixed;
   top: 20px;
   right: 20px;
-  background-color: rgb(41, 33, 56); /* Default background color */
-  color: rgb(255, 4, 163); /* Default text color */
-  border: 1px solid rgb(255, 4, 163); /* Default border color */
-  padding: 10px;
-  border-radius: 8px;
+  background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
+  color: white;
+  border: 2px solid var(--neon-cyan);
+  padding: 12px 20px;
+  border-radius: 25px;
   cursor: pointer;
-  font-size: 16px; /* Default font size */
-  transition: background-color 0.3s;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 20px rgba(255, 0, 128, 0.5),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 #settings-toggle-button:hover {
-  background-color: rgb(255, 4, 163); /* Hover background color */
-  color: rgba(41, 33, 56); /* Hover text color */
+  background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink));
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 0 60px rgba(255, 0, 128, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
-/* Styles for the settings panel */
+/* Synthwave Settings Panel */
 #settings-panel {
   position: fixed;
-  top: 64px;
+  top: 80px;
   right: 20px;
-  background-color: rgba(41, 33, 56); 
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid rgb(255, 4, 163);
+  background: var(--panel-bg);
+  padding: 25px;
+  border-radius: 20px;
+  border: 2px solid var(--neon-cyan);
   display: none;
-  color: rgb(255, 4, 163); 
+  color: white;
+  min-width: 280px;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.4),
+    inset 0 0 30px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
 }
 
-#settings-panel input[type="color"],
-#settings-panel input[type="range"] {
-  margin: 5px 0;
-}
 
 #settings-panel label {
   display: block;
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 12px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+/* Custom Range Sliders */
+#settings-panel input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+  outline: none;
+  box-shadow: 0 0 8px rgba(255, 0, 128, 0.3);
+}
+
+#settings-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--neon-cyan), var(--neon-pink));
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+  transition: all 0.2s ease;
+}
+
+#settings-panel input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+#settings-panel input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--neon-cyan), var(--neon-pink));
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+}
+
+/* Custom Color Pickers */
+#settings-panel input[type="color"] {
+  width: 50px;
+  height: 30px;
+  border: 2px solid var(--neon-cyan);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  margin: 5px 10px 5px 0;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+#settings-panel input[type="color"]:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+}
+
+/* Value Display Spans */
+#settings-panel span {
+  display: inline-block;
+  background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  margin-left: 10px;
+  min-width: 35px;
+  text-align: center;
+}
+
+/* Container for inputs */
+.input-container {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.input-container input[type="range"] {
+  flex: 1;
+}
+
+/* Retro grid background for panel */
+#settings-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: 20px;
+  pointer-events: none;
 }
