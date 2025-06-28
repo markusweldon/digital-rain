@@ -15,9 +15,37 @@ const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 const charArray = characters.split('');
 
 // Create an array to keep track of the position of each column
-const drops = [];
-for (let i = 0; i < columns; i++) {
-  drops[i] = 1;
+let drops = [];
+
+// Animation control
+let animationId;
+let animationSpeed = 1;
+let lastTime = 0;
+const targetFPS = 30;
+
+// Initialize drops array
+function initDrops() {
+  drops = [];
+  for (let i = 0; i < columns; i++) {
+    drops[i] = 1;
+  }
+}
+
+// Initialize on load
+initDrops();
+
+// Handle window resize
+function handleResize() {
+  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  columns = canvas.width / fontSize;
+  initDrops();
+}
+
+// Fixed hex conversion with proper padding
+function toHex(value) {
+  const hex = Math.floor(value * 255).toString(16);
+  return hex.length === 1 ? '0' + hex : hex;
 }
 
 function updateStyles() {
@@ -26,24 +54,53 @@ function updateStyles() {
   const bgColorPicker = document.getElementById('bg-color-picker').value;
   const textColorPicker = document.getElementById('text-color-picker').value;
   
-  document.documentElement.style.setProperty('--background-color', `${bgColorPicker}${Math.floor(bgAlpha * 255).toString(16)}`);
-  document.documentElement.style.setProperty('--text-color', `${textColorPicker}${Math.floor(textAlpha * 255).toString(16)}`);
+  // Fixed alpha channel conversion
+  document.documentElement.style.setProperty('--background-color', `${bgColorPicker}${toHex(bgAlpha)}`);
+  document.documentElement.style.setProperty('--text-color', `${textColorPicker}${toHex(textAlpha)}`);
 
-  fontSize = parseInt(document.getElementById('font-size-range').value);
-  document.documentElement.style.setProperty('--font-size', fontSize + 'px');
-  document.getElementById('font-size-value').textContent = fontSize + 'px';
-  columns = canvas.width / fontSize;
+  const newFontSize = parseInt(document.getElementById('font-size-range').value);
+  if (newFontSize !== fontSize) {
+    fontSize = newFontSize;
+    document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+    document.getElementById('font-size-value').textContent = fontSize + 'px';
+    columns = canvas.width / fontSize;
+    initDrops(); // Reset drops when font size changes
+  }
 }
 
-document.getElementById('bg-color-picker').addEventListener('input', updateStyles);
-document.getElementById('text-color-picker').addEventListener('input', updateStyles);
-document.getElementById('bg-alpha-range').addEventListener('input', updateStyles);
-document.getElementById('text-alpha-range').addEventListener('input', updateStyles);
-document.getElementById('font-size-range').addEventListener('input', updateStyles);
+// Event listeners with proper references for cleanup
+const bgColorPicker = document.getElementById('bg-color-picker');
+const textColorPicker = document.getElementById('text-color-picker');
+const bgAlphaRange = document.getElementById('bg-alpha-range');
+const textAlphaRange = document.getElementById('text-alpha-range');
+const fontSizeRange = document.getElementById('font-size-range');
+const speedRange = document.getElementById('speed-range');
+const settingsButton = document.getElementById('settings-toggle-button');
 
-document.getElementById('settings-toggle-button').addEventListener('click', () => {
+bgColorPicker.addEventListener('input', updateStyles);
+textColorPicker.addEventListener('input', updateStyles);
+bgAlphaRange.addEventListener('input', updateStyles);
+textAlphaRange.addEventListener('input', updateStyles);
+fontSizeRange.addEventListener('input', updateStyles);
+speedRange.addEventListener('input', () => {
+  animationSpeed = parseFloat(speedRange.value);
+  document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
+});
+
+settingsButton.addEventListener('click', () => {
   const settingsPanel = document.getElementById('settings-panel');
   settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+});
+
+// Close settings panel when clicking outside
+document.addEventListener('click', (event) => {
+  const settingsPanel = document.getElementById('settings-panel');
+  const isClickInsideSettings = settingsPanel.contains(event.target);
+  const isClickOnButton = settingsButton.contains(event.target);
+  
+  if (!isClickInsideSettings && !isClickOnButton && settingsPanel.style.display === 'block') {
+    settingsPanel.style.display = 'none';
+  }
 });
 
 function draw() {
@@ -71,5 +128,39 @@ function draw() {
   }
 }
 
-// Call the draw() function at a regular interval to create the rain effect on the canvas
-setInterval(draw, 33);
+// Animation loop using requestAnimationFrame with speed control
+function animate(currentTime) {
+  if (!lastTime) lastTime = currentTime;
+  
+  const deltaTime = currentTime - lastTime;
+  const frameInterval = 1000 / (targetFPS * animationSpeed);
+  
+  if (deltaTime >= frameInterval) {
+    draw();
+    lastTime = currentTime - (deltaTime % frameInterval);
+  }
+  
+  animationId = requestAnimationFrame(animate);
+}
+
+// Start animation
+animate();
+
+// Add resize event listener
+window.addEventListener('resize', handleResize);
+
+// Initialize displays
+document.getElementById('font-size-value').textContent = fontSize + 'px';
+document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
+
+// Cleanup function (useful if this becomes a module)
+function cleanup() {
+  cancelAnimationFrame(animationId);
+  window.removeEventListener('resize', handleResize);
+  bgColorPicker.removeEventListener('input', updateStyles);
+  textColorPicker.removeEventListener('input', updateStyles);
+  bgAlphaRange.removeEventListener('input', updateStyles);
+  textAlphaRange.removeEventListener('input', updateStyles);
+  fontSizeRange.removeEventListener('input', updateStyles);
+  speedRange.removeEventListener('input', updateStyles);
+}
