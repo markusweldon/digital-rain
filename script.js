@@ -87,9 +87,31 @@ speedRange.addEventListener('input', () => {
   document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
 });
 
+// Check if mobile
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
 settingsButton.addEventListener('click', () => {
   const settingsPanel = document.getElementById('settings-panel');
-  settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+  
+  if (isMobile()) {
+    // Mobile: Toggle bottom sheet with animation
+    if (settingsPanel.classList.contains('show')) {
+      settingsPanel.classList.remove('show');
+      setTimeout(() => {
+        settingsPanel.style.display = 'none';
+      }, 300);
+    } else {
+      settingsPanel.style.display = 'block';
+      requestAnimationFrame(() => {
+        settingsPanel.classList.add('show');
+      });
+    }
+  } else {
+    // Desktop: Regular toggle
+    settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+  }
 });
 
 // Close settings panel when clicking outside
@@ -98,8 +120,17 @@ document.addEventListener('click', (event) => {
   const isClickInsideSettings = settingsPanel.contains(event.target);
   const isClickOnButton = settingsButton.contains(event.target);
   
-  if (!isClickInsideSettings && !isClickOnButton && settingsPanel.style.display === 'block') {
-    settingsPanel.style.display = 'none';
+  const isOpen = isMobile() ? settingsPanel.classList.contains('show') : settingsPanel.style.display === 'block';
+  
+  if (!isClickInsideSettings && !isClickOnButton && isOpen) {
+    if (isMobile()) {
+      settingsPanel.classList.remove('show');
+      setTimeout(() => {
+        settingsPanel.style.display = 'none';
+      }, 300);
+    } else {
+      settingsPanel.style.display = 'none';
+    }
   }
 });
 
@@ -146,8 +177,20 @@ function animate(currentTime) {
 // Start animation
 animate();
 
-// Add resize event listener
-window.addEventListener('resize', handleResize);
+// Handle responsive layout changes
+function handleResponsiveChange() {
+  const settingsPanel = document.getElementById('settings-panel');
+  
+  // Reset panel state when switching between mobile/desktop
+  settingsPanel.classList.remove('show');
+  settingsPanel.style.display = 'none';
+}
+
+// Add resize event listeners
+window.addEventListener('resize', () => {
+  handleResize();
+  handleResponsiveChange();
+});
 
 // Initialize displays
 document.getElementById('font-size-value').textContent = fontSize + 'px';
