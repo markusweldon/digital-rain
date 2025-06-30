@@ -89,7 +89,14 @@ speedRange.addEventListener('input', () => {
 
 // Check if mobile
 function isMobile() {
-  return window.innerWidth <= 768;
+  return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Force mobile styles if detected
+function applyMobileStyles() {
+  if (isMobile()) {
+    document.body.classList.add('mobile-device');
+  }
 }
 
 settingsButton.addEventListener('click', () => {
@@ -195,6 +202,9 @@ window.addEventListener('resize', () => {
 // Initialize displays
 document.getElementById('font-size-value').textContent = fontSize + 'px';
 document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
+
+// Apply mobile styles on load
+applyMobileStyles();
 
 // Cleanup function (useful if this becomes a module)
 function cleanup() {
