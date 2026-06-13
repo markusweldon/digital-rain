@@ -2,46 +2,99 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Matrix-style digital rain — a customizable canvas effect with themes, character sets and fullscreen mode.">
 <title>Digital Rain</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="digitalRainCanvas"></canvas>
+<canvas id="digitalRainCanvas" aria-hidden="true"></canvas>
 
-<div id="settings-panel">
-  <label>
-      Background
-      <div class="input-container">
-        <input type="range" id="bg-alpha-range" min="0.08" max="0.5" step="0.01" value="0.08" />
-        <input type="color" id="bg-color-picker" value="#292138" />
-      </div>
-  </label>
-  <label>
-      Digital Rain
-      <div class="input-container">
-        <input type="range" id="text-alpha-range" min="0.5" max="1" step="0.01" value="1" />
-        <input type="color" id="text-color-picker" value="#FF04A3" />
-      </div>
-  </label>
-  <label>
-      Font Size
-      <div class="input-container">
-        <input type="range" id="font-size-range" min="10" max="40" step="1" value="10" />
-        <span id="font-size-value"></span>
-      </div>
-  </label>
-  <label>
-      Speed
-      <div class="input-container">
-        <input type="range" id="speed-range" min="0.1" max="2" step="0.1" value="1" />
-        <span id="speed-value"></span>
-      </div>
-  </label>
+<button id="settings-toggle-button" aria-expanded="false" aria-controls="settings-panel">Settings</button>
+
+<div id="settings-panel" role="dialog" aria-label="Digital rain settings">
+  <div class="setting">
+    <label for="theme-select">Theme</label>
+    <div class="input-container">
+      <select id="theme-select">
+        <option value="matrix">Matrix</option>
+        <option value="synthwave" selected>Synthwave</option>
+        <option value="amber">Amber</option>
+        <option value="ice">Ice</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="bg-alpha-range">Background</label>
+    <div class="input-container">
+      <input type="range" id="bg-alpha-range" min="0.02" max="0.5" step="0.01" value="0.08" aria-label="Trail fade">
+      <input type="color" id="bg-color-picker" value="#292138" aria-label="Background color">
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="text-alpha-range">Digital Rain</label>
+    <div class="input-container">
+      <input type="range" id="text-alpha-range" min="0.3" max="1" step="0.01" value="1" aria-label="Rain opacity">
+      <input type="color" id="text-color-picker" value="#ff04a3" aria-label="Rain color">
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="charset-select">Characters</label>
+    <div class="input-container">
+      <select id="charset-select">
+        <option value="katakana">Katakana</option>
+        <option value="latin" selected>Latin</option>
+        <option value="binary">Binary</option>
+        <option value="symbols">Symbols</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="input-container" id="custom-chars-row" hidden>
+      <input type="text" id="custom-chars-input" placeholder="Your own alphabet…" maxlength="200" aria-label="Custom characters" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="font-size-range">Font Size</label>
+    <div class="input-container">
+      <input type="range" id="font-size-range" min="10" max="40" step="1" value="16">
+      <span id="font-size-value"></span>
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="speed-range">Speed</label>
+    <div class="input-container">
+      <input type="range" id="speed-range" min="0.1" max="2" step="0.1" value="1">
+      <span id="speed-value"></span>
+    </div>
+  </div>
+
+  <div class="setting">
+    <label for="density-range">Density</label>
+    <div class="input-container">
+      <input type="range" id="density-range" min="0.1" max="1" step="0.05" value="1">
+      <span id="density-value"></span>
+    </div>
+  </div>
+
+  <div class="setting setting-checkbox">
+    <label for="glow-checkbox">Glow</label>
+    <input type="checkbox" id="glow-checkbox" checked>
+  </div>
+
+  <div class="button-row">
+    <button type="button" id="play-toggle" aria-pressed="false">⏸ Pause</button>
+    <button type="button" id="shuffle-button">Shuffle</button>
+    <button type="button" id="fullscreen-button">Fullscreen</button>
+    <button type="button" id="reset-button">Reset</button>
+  </div>
 </div>
 
-<button id="settings-toggle-button">Settings</button>
-
-<script src="script.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>
