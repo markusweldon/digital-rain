@@ -34,6 +34,7 @@
     speed: 1,
     density: 1,
     glow: true,
+    grid: false,
     charset: 'latin',
     customChars: '',
   };
@@ -140,6 +141,7 @@
     if (CHARSETS[loaded.charset] || loaded.charset === 'custom') s.charset = loaded.charset;
     if (typeof loaded.customChars === 'string') s.customChars = loaded.customChars.slice(0, 200);
     if (typeof loaded.glow === 'boolean') s.glow = loaded.glow;
+    if (typeof loaded.grid === 'boolean') s.grid = loaded.grid;
     return s;
   }
 
@@ -157,6 +159,7 @@
       this.running = false;
       this.rafId = 0;
       this.lastTime = 0;
+      this.gridPhase = 0; // 0..1 scroll offset for the synthwave floor grid
       this.tick = this.tick.bind(this);
     }
 
@@ -166,6 +169,7 @@
       this.speed = settings.speed;
       this.density = settings.density;
       this.glow = settings.glow;
+      this.gridEnabled = settings.grid;
       this.bgFill = hexWithAlpha(settings.bgColor, settings.bgAlpha);
       this.bgOpaque = settings.bgColor;
       this.rainFill = hexWithAlpha(settings.rainColor, settings.rainAlpha);
@@ -240,11 +244,77 @@
       this.step();
     }
 
+    // A classic synthwave perspective floor in the lower part of the screen:
+    // vertical lines fanning from a vanishing point on the horizon, plus
+    // horizontal lines that bunch toward the horizon and scroll outward.
+    // Drawn on the rain canvas (behind the glyphs); save/restore keeps its
+    // alpha/shadow state from leaking into the rain passes.
+    drawGrid() {
+      if (!this.gridEnabled || !this.height) return;
+      const { ctx } = this;
+      const W = this.width;
+      const H = this.height;
+      const horizonY = H * 0.62;
+      const vpX = W / 2;
+      const floorH = H - horizonY;
+      const ROWS = 14;
+      const COLS = 16;
+      const baseAlpha = 0.22;
+
+      ctx.save();
+      ctx.strokeStyle = this.rainColor;
+      ctx.lineWidth = 1;
+      if (this.glow) {
+        ctx.shadowColor = this.rainColor;
+        ctx.shadowBlur = this.fontSize * 0.5;
+      }
+
+      // Vertical fan — endpoints evenly spaced along the bottom edge (with
+      // overscan) so the lines converge correctly at the vanishing point.
+      ctx.globalAlpha = baseAlpha;
+      ctx.beginPath();
+      for (let c = -COLS; c <= COLS; c++) {
+        ctx.moveTo(vpX, horizonY);
+        ctx.lineTo(vpX + (c / COLS) * W * 1.6, H);
+      }
+      ctx.stroke();
+
+      // Horizontal scroll lines — quadratic spacing bunches them near the
+      // horizon; per-line edge fade hides the seam as the phase wraps.
+      for (let r = 0; r < ROWS; r++) {
+        const t = (r + this.gridPhase) / ROWS;
+        const y = horizonY + t * t * floorH;
+        const edgeFade = Math.min(1, t * 4) * Math.min(1, (1 - t) * 4 + 0.25);
+        ctx.globalAlpha = baseAlpha * edgeFade;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Bright horizon line ties the floor to the "sky".
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.lineTo(W, horizonY);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
     step() {
       const { ctx, fontSize, chars } = this;
 
       ctx.fillStyle = this.bgFill;
       ctx.fillRect(0, 0, this.width, this.height);
+
+      this.drawGrid();
+      if (this.gridEnabled) {
+        // One full row-slot every 20 steps; scroll speed tracks the Speed
+        // slider since step() cadence does. Wrap for a seamless loop.
+        this.gridPhase += 0.05;
+        if (this.gridPhase >= 1) this.gridPhase -= 1;
+      }
 
       // Pass A — trail bodies. The just-vacated head cell is repainted with a
       // fresh random glyph in the rain color: this both dims last frame's
@@ -298,6 +368,7 @@
       const rows = Math.ceil(this.height / fontSize);
       ctx.fillStyle = this.bgOpaque;
       ctx.fillRect(0, 0, this.width, this.height);
+      this.drawGrid(); // frozen at the current phase while paused
       for (let i = 0; i < this.columns; i++) {
         if (Math.random() > this.density) continue;
         const x = (i + 0.5) * fontSize;
@@ -341,6 +412,7 @@
     customRow: $('custom-chars-row'),
     customChars: $('custom-chars-input'),
     glow: $('glow-checkbox'),
+    grid: $('grid-checkbox'),
     play: $('play-toggle'),
     reset: $('reset-button'),
     shuffle: $('shuffle-button'),
@@ -373,6 +445,7 @@
     controls.customChars.value = settings.customChars;
     controls.customRow.hidden = settings.charset !== 'custom';
     controls.glow.checked = settings.glow;
+    controls.grid.checked = settings.grid;
   }
 
   function applySettings(partial, { keepTheme = false } = {}) {
@@ -426,6 +499,10 @@
 
   controls.glow.addEventListener('change', () => {
     applySettings({ glow: controls.glow.checked }, { keepTheme: true });
+  });
+
+  controls.grid.addEventListener('change', () => {
+    applySettings({ grid: controls.grid.checked }, { keepTheme: true });
   });
 
   controls.reset.addEventListener('click', () => {
