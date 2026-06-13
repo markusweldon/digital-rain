@@ -1,12 +1,19 @@
 :root {
-  --background-color: rgba(41, 33, 56, 0.08);
-  --text-color: rgb(255, 4, 163);
-  --font-size: 16px;
+  --page-bg: #292138;
+  --text-color: #ff04a3;
   --neon-pink: #ff0080;
   --neon-cyan: #00ffff;
   --neon-purple: #8000ff;
-  --dark-bg: #0a0a0f;
   --panel-bg: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* display rules (e.g. flex on .input-container) must not defeat [hidden] */
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -15,21 +22,35 @@ body {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  background-color: var(--background-color);
+  background-color: var(--page-bg);
   font-family: 'Courier New', monospace;
 }
 
 canvas {
   display: block;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+/* Screensaver mode: fade the UI out after a few idle seconds */
+body.ui-hidden {
+  cursor: none;
+}
+
+body.ui-hidden #settings-toggle-button {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Synthwave Settings Button */
 #settings-toggle-button {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  display: block !important;
-  background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--panel-bg);
   color: white;
   border: 2px solid var(--neon-cyan);
   padding: 10px 35px 10px 18px;
@@ -40,31 +61,21 @@ canvas {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
-  transition: all 0.3s ease;
-  box-shadow: 
+  transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow:
     0 0 20px rgba(0, 255, 255, 0.4),
     inset 0 0 20px rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
   z-index: 1000;
-  position: relative;
-}
-
-/* Blinking cursor animation */
-@keyframes blinkCursor {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
 }
 
 /* Retro grid background for button */
 #settings-toggle-button::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
+  inset: 0;
+  background-image:
     linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 10px 10px;
@@ -84,21 +95,11 @@ canvas {
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
 }
 
-
-@keyframes rotateGear {
-  0% { transform: translateY(-50%) rotate(0deg); }
-  100% { transform: translateY(-50%) rotate(360deg); }
-}
-
 #settings-toggle-button:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 0 30px rgba(0, 255, 255, 0.6),
     inset 0 0 25px rgba(255, 255, 255, 0.1);
-}
-
-#settings-toggle-button:hover::before {
-  opacity: 1;
 }
 
 #settings-toggle-button:hover::after {
@@ -115,19 +116,54 @@ canvas {
   padding: 25px;
   border-radius: 20px;
   border: 2px solid var(--neon-cyan);
-  display: none;
   color: white;
-  min-width: 280px;
-  box-shadow: 
+  min-width: 300px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  box-shadow:
     0 0 20px rgba(0, 255, 255, 0.4),
     inset 0 0 30px rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(5px);
+  z-index: 1001;
+  /* Closed by default; .open drives both the desktop popover and the
+     mobile bottom sheet */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    visibility 0s linear 0.25s;
 }
 
+#settings-panel.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Retro grid background for panel */
+#settings-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.setting {
+  margin-bottom: 20px;
+}
 
 #settings-panel label {
   display: block;
-  margin-bottom: 20px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -136,11 +172,23 @@ canvas {
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
 }
 
+.input-container {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  gap: 10px;
+}
+
+.input-container input[type="range"] {
+  flex: 1;
+}
+
 /* Custom Range Sliders */
 #settings-panel input[type="range"] {
   width: 100%;
   margin: 10px 0;
   -webkit-appearance: none;
+  appearance: none;
   height: 6px;
   border-radius: 5px;
   background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
@@ -158,7 +206,7 @@ canvas {
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #settings-panel input[type="range"]::-webkit-slider-thumb:hover {
@@ -184,9 +232,9 @@ canvas {
   border-radius: 10px;
   background: transparent;
   cursor: pointer;
-  margin: 5px 0 5px 15px;
+  padding: 2px;
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #settings-panel input[type="color"]:hover {
@@ -194,7 +242,45 @@ canvas {
   box-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
 }
 
-/* Value Display Spans */
+/* Selects and text input */
+#settings-panel select,
+#settings-panel input[type="text"] {
+  width: 100%;
+  background: rgba(10, 10, 20, 0.6);
+  color: white;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+}
+
+#settings-panel select:focus,
+#settings-panel input[type="text"]:focus {
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+}
+
+#settings-panel select option {
+  background: #16213e;
+}
+
+/* Glow checkbox */
+.setting-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#settings-panel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--neon-pink);
+  cursor: pointer;
+}
+
+/* Value display spans */
 #settings-panel span {
   display: inline-block;
   background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
@@ -206,180 +292,131 @@ canvas {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
   border: 1px solid var(--neon-cyan);
   box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-  margin-left: 10px;
   min-width: 35px;
   text-align: center;
 }
 
-/* Container for inputs */
-.input-container {
+/* Action buttons */
+.button-row {
   display: flex;
-  align-items: center;
-  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
 }
 
-.input-container input[type="range"] {
-  flex: 1;
+.button-row button {
+  flex: 1 1 calc(50% - 8px);
+  background: rgba(10, 10, 20, 0.6);
+  color: white;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-/* Retro grid background for panel */
-#settings-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border-radius: 20px;
-  pointer-events: none;
+.button-row button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(0, 255, 255, 0.5);
 }
 
-/* Mobile Responsive Design - Using screen width */
+/* Mobile: floating gear + bottom sheet */
 @media screen and (max-width: 480px) {
-  /* Force mobile button style */
   #settings-toggle-button {
-    position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
-    top: auto !important;
-    width: 56px !important;
-    height: 56px !important;
-    border-radius: 50% !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0 !important;
-    box-shadow: 
+    top: auto;
+    bottom: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.3),
-      0 0 20px rgba(0, 255, 255, 0.4) !important;
+      0 0 20px rgba(0, 255, 255, 0.4);
   }
-  
+
   #settings-toggle-button::before {
-    display: none !important;
+    display: none;
   }
-  
-  /* Hide text on mobile, show only gear */
+
   #settings-toggle-button::after {
-    font-size: 24px !important;
-    position: static !important;
-    transform: none !important;
-    right: auto !important;
-    margin: 0 !important;
+    font-size: 24px;
+    position: static;
+    transform: none;
   }
 
-  /* Mobile Settings Panel - Bottom Sheet */
   #settings-panel {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-width: auto !important;
-    max-height: 70vh !important;
-    border-radius: 20px 20px 0 0 !important;
-    border: 2px solid var(--neon-cyan) !important;
-    border-bottom: none !important;
-    transform: translateY(100%) !important;
-    transition: transform 0.3s ease-out !important;
-    overflow-y: auto !important;
-    padding: 25px 20px 30px !important;
-    margin: 0 !important;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: auto;
+    max-height: 70vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    padding: 25px 20px 30px;
+    opacity: 1;
+    transform: translateY(100%);
+    transition:
+      transform 0.3s ease-out,
+      visibility 0s linear 0.3s;
   }
 
-  #settings-panel.show {
-    transform: translateY(0) !important;
+  #settings-panel.open {
+    transform: translateY(0);
+    transition: transform 0.3s ease-out;
   }
 
-  /* Mobile-friendly controls */
   #settings-panel label {
-    display: block !important;
-    margin-bottom: 25px !important;
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
-  #settings-panel .input-container {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    margin-top: 12px !important;
+  .setting {
+    margin-bottom: 25px;
+  }
+
+  .input-container {
+    margin-top: 12px;
   }
 
   #settings-panel input[type="range"] {
-    flex: 1 !important;
-    height: 6px !important;
-    margin: 0 !important;
+    margin: 0;
   }
 
   #settings-panel input[type="range"]::-webkit-slider-thumb {
-    width: 32px !important;
-    height: 32px !important;
+    width: 32px;
+    height: 32px;
   }
 
   #settings-panel input[type="color"] {
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 10px !important;
-    margin: 0 !important;
+    width: 50px;
+    height: 50px;
   }
 
-  /* Value displays */
   #settings-panel span {
-    padding: 10px 16px !important;
-    font-size: 14px !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
+    padding: 10px 16px;
+    font-size: 14px;
+    white-space: nowrap;
   }
 }
 
-/* Tablet breakpoint */
-@media (max-width: 1024px) and (min-width: 769px) {
-  #settings-panel {
-    min-width: 320px;
-  }
-  
-  #settings-toggle-button {
-    padding: 15px 25px;
-    font-size: 16px;
-  }
-}
-
-/* Additional mobile overrides for any screen orientation */
-@media (max-width: 480px), (max-height: 480px) {
-  body {
-    overflow: hidden !important;
-  }
-  
-  canvas {
-    touch-action: none;
-  }
-}
-
-/* iOS Safari specific fixes */
+/* iOS Safari */
 @supports (-webkit-touch-callout: none) {
   #settings-panel {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   #settings-toggle-button {
     -webkit-tap-highlight-color: transparent;
-  }
-}
-
-/* Force mobile styles on small viewports */
-@media only screen and (max-device-width: 480px) {
-  #settings-toggle-button {
-    position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
-    top: auto !important;
-    width: 56px !important;
-    height: 56px !important;
   }
 }
