@@ -306,8 +306,8 @@
       const horizonY = H * 0.62;
       const vpX = W / 2;
       const floorH = H - horizonY;
-      const ROWS = 9;
-      const COLS = 7;
+      const ROWS = 6;
+      const COLS = 4;
       const baseAlpha = 0.3;
 
       ctx.save();
