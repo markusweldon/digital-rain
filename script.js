@@ -35,6 +35,9 @@
     density: 1,
     glow: true,
     grid: false,
+    trailGradient: true,
+    message: '',
+    messageStyle: 'transmission',
     charset: 'latin',
     customChars: '',
   };
@@ -70,6 +73,34 @@
   function mixWithWhite(hex, t) {
     const [r, g, b] = hexToRgb(hex);
     return rgbToHex(r + (255 - r) * t, g + (255 - g) * t, b + (255 - b) * t);
+  }
+
+  // Linear blend between two [r,g,b] arrays.
+  function lerpRgb(a, b, t) {
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  }
+
+  // ----- Shareable-URL codec: settings <-> URL-safe base64 of JSON -----
+  function encodeSettings(s) {
+    try {
+      const bytes = new TextEncoder().encode(JSON.stringify(s));
+      let bin = '';
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch {
+      return '';
+    }
+  }
+
+  function decodeSettings(str) {
+    try {
+      const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      const bin = atob(b64);
+      const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+      return null;
+    }
   }
 
   function hslToHex(h, s, l) {
@@ -142,6 +173,11 @@
     if (typeof loaded.customChars === 'string') s.customChars = loaded.customChars.slice(0, 200);
     if (typeof loaded.glow === 'boolean') s.glow = loaded.glow;
     if (typeof loaded.grid === 'boolean') s.grid = loaded.grid;
+    if (typeof loaded.trailGradient === 'boolean') s.trailGradient = loaded.trailGradient;
+    if (typeof loaded.message === 'string') s.message = loaded.message.slice(0, 60);
+    if (loaded.messageStyle === 'transmission' || loaded.messageStyle === 'woven') {
+      s.messageStyle = loaded.messageStyle;
+    }
     return s;
   }
 
@@ -160,6 +196,9 @@
       this.rafId = 0;
       this.lastTime = 0;
       this.gridPhase = 0; // 0..1 scroll offset for the synthwave floor grid
+      this.msgClock = 0;  // step counter driving the transmission fade cycle
+      this.woven = null;  // active woven-message run, or null between runs
+      this.wovenGap = 0;  // steps remaining before the next woven run
       this.tick = this.tick.bind(this);
     }
 
@@ -176,6 +215,16 @@
       this.rainColor = settings.rainColor;
       this.headFill = resolveHeadColor(settings);
       this.chars = resolveCharset(settings);
+      this.trailGradient = settings.trailGradient;
+      // Precomputed RGB triplets for trail-gradient interpolation.
+      this.rainRgb = hexToRgb(settings.rainColor);
+      this.bgRgb = hexToRgb(settings.bgColor);
+      if (settings.message !== this.message || settings.messageStyle !== this.messageStyle) {
+        this.woven = null; // restart the reveal if the text/style changed
+        this.wovenGap = 0;
+      }
+      this.message = settings.message;
+      this.messageStyle = settings.messageStyle;
       if (fontChanged) {
         this.resize(true);
       }
@@ -259,7 +308,7 @@
       const floorH = H - horizonY;
       const ROWS = 14;
       const COLS = 16;
-      const baseAlpha = 0.22;
+      const baseAlpha = 0.28;
 
       ctx.save();
       ctx.strokeStyle = this.rainColor;
@@ -347,6 +396,25 @@
         }
       }
 
+      // Trail gradient — a short bright "neck" just above each head, fading
+      // from the rain color toward the background. The bgFill fade still owns
+      // the long tail below it; this only sharpens the freshest cells.
+      if (this.trailGradient) {
+        const NECK = 9;
+        for (let h = 0; h < heads.length; h += 2) {
+          const x = heads[h];
+          const headY = heads[h + 1];
+          for (let k = 1; k <= NECK; k++) {
+            const y = headY - k * fontSize;
+            if (y < 0) break;
+            const f = (k - 1) / (NECK - 1);
+            const [r, g, b] = lerpRgb(this.rainRgb, this.bgRgb, f);
+            ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${(1 - f * 0.85).toFixed(3)})`;
+            ctx.fillText(chars[(Math.random() * chars.length) | 0], x, y);
+          }
+        }
+      }
+
       // Pass B — glowing heads, batched so shadow state changes only once
       // per frame (per-glyph shadow toggling is a major canvas perf trap).
       if (this.glow) {
@@ -358,6 +426,101 @@
         ctx.fillText(chars[(Math.random() * chars.length) | 0], heads[i], heads[i + 1]);
       }
       ctx.shadowBlur = 0;
+
+      this.drawMessage(true);
+    }
+
+    // Hidden message overlay. Isolated seam so the presentation style can be
+    // swapped. `animate` advances timing (false = a single frozen frame).
+    drawMessage(animate) {
+      if (!this.message) return;
+      if (this.messageStyle === 'woven') {
+        this.drawWoven(animate);
+      } else {
+        this.drawTransmission(animate);
+      }
+    }
+
+    // "Transmission": the phrase fades in centered, holds, fades out, loops.
+    drawTransmission(animate) {
+      const { ctx } = this;
+      // 160-step cycle (~5.3s at 30fps): fade in / hold / fade out / gap.
+      const CYCLE = 160;
+      if (animate) this.msgClock = (this.msgClock + 1) % CYCLE;
+      const p = this.msgClock;
+      let alpha;
+      if (!animate) alpha = 1;          // frozen frame shows it fully
+      else if (p < 20) alpha = p / 20;
+      else if (p < 120) alpha = 1;
+      else if (p < 140) alpha = 1 - (p - 120) / 20;
+      else return;                       // gap — nothing drawn
+      if (alpha <= 0) return;
+
+      ctx.save();
+      // Scale the text to ~82% of the canvas width.
+      let size = this.fontSize * 3;
+      ctx.font = `bold ${size}px monospace`;
+      const target = this.width * 0.82;
+      const w = ctx.measureText(this.message).width;
+      if (w > target) {
+        size = Math.max(this.fontSize, size * (target / w));
+        ctx.font = `bold ${size}px monospace`;
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = this.rainColor;
+      ctx.shadowBlur = size * 0.5;
+      ctx.fillStyle = this.headFill;
+      ctx.fillText(this.message, this.width / 2, this.height / 2);
+      ctx.restore();
+    }
+
+    // "Woven": every so often a column spells the phrase top-to-bottom as a
+    // bright block descending through the rain.
+    drawWoven(animate) {
+      const { ctx, fontSize } = this;
+      const chars = Array.from(this.message);
+      const len = chars.length;
+      const rows = Math.ceil(this.height / fontSize);
+
+      if (!animate) {
+        // Frozen frame: show the block centered in a central column.
+        const col = Math.floor(this.columns / 2);
+        const top = Math.max(0, Math.floor((rows - len) / 2));
+        this.paintWoven(col, top + len, chars);
+        return;
+      }
+
+      if (!this.woven) {
+        if (this.wovenGap > 0) { this.wovenGap--; return; }
+        const col = 2 + Math.floor(Math.random() * Math.max(1, this.columns - 4));
+        this.woven = { col, headRow: 0 };
+      }
+      const run = this.woven;
+      this.paintWoven(run.col, run.headRow, chars);
+      run.headRow++;
+      if (run.headRow - len > rows) {       // fully off the bottom
+        this.woven = null;
+        this.wovenGap = 120;                // ~4s pause before the next run
+      }
+    }
+
+    // Draw the message chars stacked in one column, last char at `headRow`.
+    paintWoven(col, headRow, chars) {
+      const { ctx, fontSize } = this;
+      const x = (col + 0.5) * fontSize;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.shadowColor = this.rainColor;
+      ctx.shadowBlur = this.glow ? fontSize * 0.8 : 0;
+      for (let ci = 0; ci < chars.length; ci++) {
+        const row = headRow - (chars.length - 1 - ci);
+        if (row < 0 || row > this.height / fontSize) continue;
+        ctx.fillStyle = ci === chars.length - 1 ? this.headFill : this.rainColor;
+        ctx.fillText(chars[ci], x, row * fontSize);
+      }
+      ctx.restore();
     }
 
     // A single frozen "mid-rain" frame, used when the animation is paused
@@ -383,6 +546,7 @@
         }
       }
       ctx.globalAlpha = 1;
+      this.drawMessage(false);
     }
   }
 
@@ -393,8 +557,12 @@
   const canvas = $('digitalRainCanvas');
   const engine = new RainEngine(canvas);
 
-  const settings = sanitize(Storage.load());
+  // A shared link (#s=…) takes precedence over saved settings, then persists.
+  const hashMatch = location.hash.match(/(?:^#|&)s=([^&]+)/);
+  const fromHash = hashMatch ? decodeSettings(hashMatch[1]) : null;
+  const settings = sanitize(fromHash || Storage.load());
   const saveDebounced = debounce(() => Storage.save(settings), 300);
+  if (fromHash) Storage.save(settings);
 
   const controls = {
     theme: $('theme-select'),
@@ -413,9 +581,14 @@
     customChars: $('custom-chars-input'),
     glow: $('glow-checkbox'),
     grid: $('grid-checkbox'),
+    trailGradient: $('gradient-checkbox'),
+    message: $('message-input'),
+    messageStyle: $('message-style-select'),
+    messageStyleRow: $('message-style-row'),
     play: $('play-toggle'),
     reset: $('reset-button'),
     shuffle: $('shuffle-button'),
+    share: $('share-button'),
     fullscreen: $('fullscreen-button'),
     panel: $('settings-panel'),
     toggle: $('settings-toggle-button'),
@@ -446,6 +619,10 @@
     controls.customRow.hidden = settings.charset !== 'custom';
     controls.glow.checked = settings.glow;
     controls.grid.checked = settings.grid;
+    controls.trailGradient.checked = settings.trailGradient;
+    controls.message.value = settings.message;
+    controls.messageStyle.value = settings.messageStyle;
+    controls.messageStyleRow.hidden = !settings.message;
   }
 
   function applySettings(partial, { keepTheme = false } = {}) {
@@ -503,6 +680,41 @@
 
   controls.grid.addEventListener('change', () => {
     applySettings({ grid: controls.grid.checked }, { keepTheme: true });
+  });
+
+  controls.trailGradient.addEventListener('change', () => {
+    applySettings({ trailGradient: controls.trailGradient.checked }, { keepTheme: true });
+  });
+
+  controls.message.addEventListener('input', () => {
+    applySettings({ message: controls.message.value }, { keepTheme: true });
+    controls.messageStyleRow.hidden = !settings.message;
+  });
+  controls.messageStyle.addEventListener('change', () => {
+    applySettings({ messageStyle: controls.messageStyle.value }, { keepTheme: true });
+  });
+
+  controls.share.addEventListener('click', async () => {
+    const url = location.origin + location.pathname + '#s=' + encodeSettings(settings);
+    try { history.replaceState(null, '', url); } catch { /* ignore */ }
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch { /* fall through */ }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { /* fall through */ }
+    }
+    if (!ok) { try { window.prompt('Copy this link:', url); ok = true; } catch { /* ignore */ } }
+    const original = controls.share.textContent;
+    controls.share.textContent = ok ? 'Copied!' : 'Copy failed';
+    setTimeout(() => { controls.share.textContent = original; }, 1500);
   });
 
   controls.reset.addEventListener('click', () => {
