@@ -306,13 +306,13 @@
       const horizonY = H * 0.62;
       const vpX = W / 2;
       const floorH = H - horizonY;
-      const ROWS = 14;
-      const COLS = 16;
-      const baseAlpha = 0.28;
+      const ROWS = 9;
+      const COLS = 7;
+      const baseAlpha = 0.3;
 
       ctx.save();
       ctx.strokeStyle = this.rainColor;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.3;
       if (this.glow) {
         ctx.shadowColor = this.rainColor;
         ctx.shadowBlur = this.fontSize * 0.5;
@@ -598,6 +598,12 @@
     const root = document.documentElement.style;
     root.setProperty('--page-bg', settings.bgColor);
     root.setProperty('--text-color', settings.rainColor);
+    // Drive the whole UI accent from the rain color so the panel matches
+    // whatever theme is active.
+    const [r, g, b] = hexToRgb(settings.rainColor);
+    root.setProperty('--accent', settings.rainColor);
+    root.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+    root.setProperty('--accent-2', resolveHeadColor(settings));
   }
 
   // Push the current settings into every control (used on boot, theme
