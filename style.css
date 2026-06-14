@@ -1,10 +1,12 @@
 :root {
   --page-bg: #292138;
   --text-color: #ff04a3;
-  --neon-pink: #ff0080;
-  --neon-cyan: #00ffff;
-  --neon-purple: #8000ff;
-  --panel-bg: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+  /* Accent is driven from the active theme's rain color by setPageTheme().
+     Everything in the UI references it so the panel matches the rain. */
+  --accent: #ff04a3;
+  --accent-rgb: 255, 4, 163;
+  --accent-2: #ffd9f2;
+  --panel-bg: linear-gradient(135deg, #0b0b12 0%, #101019 60%, #0c1018 100%);
 }
 
 * {
@@ -45,14 +47,14 @@ body.ui-hidden #settings-toggle-button {
   pointer-events: none;
 }
 
-/* Synthwave Settings Button */
+/* Settings button */
 #settings-toggle-button {
   position: fixed;
   top: 20px;
   right: 20px;
   background: var(--panel-bg);
   color: white;
-  border: 2px solid var(--neon-cyan);
+  border: 2px solid var(--accent);
   padding: 10px 35px 10px 18px;
   border-radius: 25px;
   cursor: pointer;
@@ -61,26 +63,13 @@ body.ui-hidden #settings-toggle-button {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
-  transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   box-shadow:
-    0 0 20px rgba(0, 255, 255, 0.4),
+    0 0 20px rgba(var(--accent-rgb), 0.4),
     inset 0 0 20px rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.8);
   z-index: 1000;
-}
-
-/* Retro grid background for button */
-#settings-toggle-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 10px 10px;
-  border-radius: 20px;
-  pointer-events: none;
 }
 
 /* Gear icon */
@@ -90,24 +79,24 @@ body.ui-hidden #settings-toggle-button {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--neon-cyan);
+  color: var(--accent);
   font-size: 14px;
-  text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.8);
 }
 
 #settings-toggle-button:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow:
-    0 0 30px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(var(--accent-rgb), 0.6),
     inset 0 0 25px rgba(255, 255, 255, 0.1);
 }
 
 #settings-toggle-button:hover::after {
-  color: var(--neon-pink);
-  text-shadow: 0 0 12px rgba(255, 0, 128, 0.8);
+  color: var(--accent-2);
+  text-shadow: 0 0 12px rgba(var(--accent-rgb), 0.9);
 }
 
-/* Synthwave Settings Panel */
+/* Settings panel */
 #settings-panel {
   position: fixed;
   top: 80px;
@@ -115,14 +104,14 @@ body.ui-hidden #settings-toggle-button {
   background: var(--panel-bg);
   padding: 25px;
   border-radius: 20px;
-  border: 2px solid var(--neon-cyan);
+  border: 2px solid var(--accent);
   color: white;
   min-width: 300px;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   box-shadow:
-    0 0 20px rgba(0, 255, 255, 0.4),
-    inset 0 0 30px rgba(255, 255, 255, 0.05);
+    0 0 24px rgba(var(--accent-rgb), 0.35),
+    inset 0 0 30px rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(5px);
   z-index: 1001;
   /* Closed by default; .open drives both the desktop popover and the
@@ -145,19 +134,6 @@ body.ui-hidden #settings-toggle-button {
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-/* Retro grid background for panel */
-#settings-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border-radius: 20px;
-  pointer-events: none;
-}
-
 .setting {
   margin-bottom: 20px;
 }
@@ -168,8 +144,8 @@ body.ui-hidden #settings-toggle-button {
   text-transform: uppercase;
   letter-spacing: 1px;
   font-size: 12px;
-  color: var(--text-color);
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
 }
 
 .input-container {
@@ -183,7 +159,7 @@ body.ui-hidden #settings-toggle-button {
   flex: 1;
 }
 
-/* Custom Range Sliders */
+/* Range sliders */
 #settings-panel input[type="range"] {
   width: 100%;
   margin: 10px 0;
@@ -191,9 +167,9 @@ body.ui-hidden #settings-toggle-button {
   appearance: none;
   height: 6px;
   border-radius: 5px;
-  background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.2), var(--accent));
   outline: none;
-  box-shadow: 0 0 8px rgba(255, 0, 128, 0.3);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.3);
 }
 
 #settings-panel input[type="range"]::-webkit-slider-thumb {
@@ -202,71 +178,71 @@ body.ui-hidden #settings-toggle-button {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--neon-cyan), var(--neon-pink));
+  background: radial-gradient(circle, var(--accent-2), var(--accent));
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #settings-panel input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.8);
 }
 
 #settings-panel input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--neon-cyan), var(--neon-pink));
+  background: radial-gradient(circle, var(--accent-2), var(--accent));
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
 }
 
-/* Custom Color Pickers */
+/* Color pickers */
 #settings-panel input[type="color"] {
   width: 50px;
   height: 30px;
-  border: 2px solid var(--neon-cyan);
+  border: 2px solid var(--accent);
   border-radius: 10px;
   background: transparent;
   cursor: pointer;
   padding: 2px;
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #settings-panel input[type="color"]:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6);
 }
 
 /* Selects and text input */
 #settings-panel select,
 #settings-panel input[type="text"] {
   width: 100%;
-  background: rgba(10, 10, 20, 0.6);
+  background: rgba(8, 8, 14, 0.7);
   color: white;
-  border: 1px solid var(--neon-cyan);
+  border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 8px 10px;
   font-family: 'Courier New', monospace;
   font-size: 13px;
   outline: none;
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.2);
 }
 
 #settings-panel select:focus,
 #settings-panel input[type="text"]:focus {
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.5);
 }
 
 #settings-panel select option {
-  background: #16213e;
+  background: #101019;
 }
 
-/* Glow checkbox */
+/* Checkbox rows */
 .setting-checkbox {
   display: flex;
   align-items: center;
@@ -276,22 +252,22 @@ body.ui-hidden #settings-toggle-button {
 #settings-panel input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--neon-pink);
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
 /* Value display spans */
 #settings-panel span {
   display: inline-block;
-  background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
+  background: linear-gradient(45deg, var(--accent), rgba(var(--accent-rgb), 0.55));
   color: white;
   padding: 4px 12px;
   border-radius: 15px;
   font-size: 11px;
   font-weight: bold;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--neon-cyan);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
   min-width: 35px;
   text-align: center;
 }
@@ -306,9 +282,9 @@ body.ui-hidden #settings-toggle-button {
 
 .button-row button {
   flex: 1 1 calc(50% - 8px);
-  background: rgba(10, 10, 20, 0.6);
+  background: rgba(8, 8, 14, 0.7);
   color: white;
-  border: 1px solid var(--neon-cyan);
+  border: 1px solid var(--accent);
   border-radius: 12px;
   padding: 8px 10px;
   font-family: 'Courier New', monospace;
@@ -317,13 +293,13 @@ body.ui-hidden #settings-toggle-button {
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.2);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .button-row button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 14px rgba(0, 255, 255, 0.5);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.5);
 }
 
 /* Mobile: floating gear + bottom sheet */
@@ -341,11 +317,7 @@ body.ui-hidden #settings-toggle-button {
     justify-content: center;
     box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.3),
-      0 0 20px rgba(0, 255, 255, 0.4);
-  }
-
-  #settings-toggle-button::before {
-    display: none;
+      0 0 20px rgba(var(--accent-rgb), 0.4);
   }
 
   #settings-toggle-button::after {
